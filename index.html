@@ -28,6 +28,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 font-sans text-gray-800">
+
     <div class="max-w-3xl mx-auto p-4 sm:p-6">
         <header class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between mb-6">
             <div>
@@ -36,23 +37,21 @@
             </div>
             <div class="flex items-center gap-3 self-stretch sm:self-auto">
                 <button id="settingsBtn" class="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 bg-white/70 hover:bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" class="w-6 h-6" fill="currentColor" aria-hidden="true">
-                        <path d="M 22.205078 2 A 1.0001 1.0001 0 0 0 21.21875 2.8378906 L 20.246094 8.7929688 C 19.076509 9.1331971 17.961243 9.5922728 16.910156 10.164062 L 11.996094 6.6542969 A 1.0001 1.0001 0 0 0 10.708984 6.7597656 L 6.8183594 10.646484 A 1.0001 1.0001 0 0 0 6.7070312 11.927734 L 10.164062 16.873047 C 9.583454 17.930271 9.1142098 19.051824 8.765625 20.232422 L 2.8359375 21.21875 A 1.0001 1.0001 0 0 0 2.0019531 22.205078 L 2.0019531 27.705078 A 1.0001 1.0001 0 0 0 2.8261719 28.691406 L 8.7597656 29.742188 C 9.1064607 30.920739 9.5727226 32.043065 10.154297 33.101562 L 6.6542969 37.998047 A 1.0001 1.0001 0 0 0 6.7597656 39.285156 L 10.648438 43.175781 A 1.0001 1.0001 0 0 0 11.927734 43.289062 L 16.882812 39.820312 C 17.936999 40.39548 19.054994 40.857928 20.228516 41.201172 L 21.21875 47.164062 A 1.0001 1.0001 0 0 0 22.205078 48 L 27.705078 48 A 1.0001 1.0001 0 0 0 28.691406 47.173828 L 29.751953 41.1875 C 30.920633 40.838997 32.033372 40.369697 33.082031 39.791016 L 38.070312 43.291016 A 1.0001 1.0001 0 0 0 39.351562 43.179688 L 43.240234 39.287109 A 1.0001 1.0001 0 0 0 43.34375 37.996094 L 39.787109 33.058594 C 40.355783 32.014958 40.813915 30.908875 41.154297 29.748047 L 47.171875 28.693359 A 1.0001 1.0001 0 0 0 47.998047 27.707031 L 47.998047 22.207031 A 1.0001 1.0001 0 0 0 47.160156 21.220703 L 41.152344 20.238281 C 40.80968 19.078827 40.350281 17.974723 39.78125 16.931641 L 43.289062 11.933594 A 1.0001 1.0001 0 0 0 43.177734 10.652344 L 39.287109 6.7636719 A 1.0001 1.0001 0 0 0 37.996094 6.6601562 L 33.072266 10.201172 C 32.023186 9.6248101 30.909713 9.1579916 29.738281 8.8125 L 28.691406 2.828125 A 1.0001 1.0001 0 0 0 27.705078 2 L 22.205078 2 z M 23.056641 4 L 26.865234 4 L 27.861328 9.6855469 A 1.0001 1.0001 0 0 0 28.603516 10.484375 C 30.066026 10.848832 31.439607 11.426549 32.693359 12.185547 A 1.0001 1.0001 0 0 0 33.794922 12.142578 L 38.474609 8.7792969 L 41.167969 11.472656 L 37.835938 16.220703 A 1.0001 1.0001 0 0 0 37.796875 17.310547 C 38.548366 18.561471 39.118333 19.926379 39.482422 21.380859 A 1.0001 1.0001 0 0 0 40.291016 22.125 L 45.998047 23.058594 L 45.998047 26.867188 L 40.279297 27.871094 A 1.0001 1.0001 0 0 0 39.482422 28.617188 C 39.122545 30.069817 38.552234 31.434687 37.800781 32.685547 A 1.0001 1.0001 0 0 0 37.845703 33.785156 L 41.224609 38.474609 L 38.53125 41.169922 L 33.791016 37.84375 A 1.0001 1.0001 0 0 0 32.697266 37.808594 C 31.44975 38.567585 30.074755 39.148028 28.617188 39.517578 A 1.0001 1.0001 0 0 0 27.876953 40.3125 L 26.867188 46 L 23.052734 46 L 22.111328 40.337891 A 1.0001 1.0001 0 0 0 21.365234 39.53125 C 19.90185 39.170557 18.522094 38.59371 17.259766 37.835938 A 1.0001 1.0001 0 0 0 16.171875 37.875 L 11.46875 41.169922 L 8.7734375 38.470703 L 12.097656 33.824219 A 1.0001 1.0001 0 0 0 12.138672 32.724609 C 11.372652 31.458855 10.793319 30.079213 10.427734 28.609375 A 1.0001 1.0001 0 0 0 9.6328125 27.867188 L 4.0019531 26.867188 L 4.0019531 23.052734 L 9.6289062 22.117188 A 1.0001 1.0001 0 0 0 10.435547 21.373047 C 10.804273 19.898143 11.383325 18.518729 12.146484 17.255859 A 1.0001 1.0001 0 0 0 12.111328 16.164062 L 8.8261719 11.46875 L 11.523438 8.7734375 L 16.185547 12.105469 A 1.0001 1.0001 0 0 0 17.28125 12.148438 C 18.536908 11.394293 19.919867 10.822081 21.384766 10.462891 A 1.0001 1.0001 0 0 0 22.132812 9.6523438 L 23.056641 4 z M 25 17 C 20.593567 17 17 20.593567 17 25 C 17 29.406433 20.593567 33 25 33 C 29.406433 33 33 29.406433 33 25 C 33 20.593567 29.406433 17 25 17 z M 25 19 C 28.325553 19 31 21.674447 31 25 C 31 28.325553 28.325553 31 25 31 C 21.674447 31 19 28.325553 19 25 C 19 21.674447 21.674447 19 25 19 z" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" class="w-6 h-6" fill="currentColor" aria-hidden="true"><path d="M 22.205078 2 A 1.0001 1.0001 0 0 0 21.21875 2.8378906 L 20.246094 8.7929688 C 19.076509 9.1331971 17.961243 9.5922728 16.910156 10.164062 L 11.996094 6.6542969 A 1.0001 1.0001 0 0 0 10.708984 6.7597656 L 6.8183594 10.646484 A 1.0001 1.0001 0 0 0 6.7070312 11.927734 L 10.164062 16.873047 C 9.583454 17.930271 9.1142098 19.051824 8.765625 20.232422 L 2.8359375 21.21875 A 1.0001 1.0001 0 0 0 2.0019531 22.205078 L 2.0019531 27.705078 A 1.0001 1.0001 0 0 0 2.8261719 28.691406 L 8.7597656 29.742188 C 9.1064607 30.920739 9.5727226 32.043065 10.154297 33.101562 L 6.6542969 37.998047 A 1.0001 1.0001 0 0 0 6.7597656 39.285156 L 10.648438 43.175781 A 1.0001 1.0001 0 0 0 11.927734 43.289062 L 16.882812 39.820312 C 17.936999 40.39548 19.054994 40.857928 20.228516 41.201172 L 21.21875 47.164062 A 1.0001 1.0001 0 0 0 22.205078 48 L 27.705078 48 A 1.0001 1.0001 0 0 0 28.691406 47.173828 L 29.751953 41.1875 C 30.920633 40.838997 32.033372 40.369697 33.082031 39.791016 L 38.070312 43.291016 A 1.0001 1.0001 0 0 0 39.351562 43.179688 L 43.240234 39.287109 A 1.0001 1.0001 0 0 0 43.34375 37.996094 L 39.787109 33.058594 C 40.355783 32.014958 40.813915 30.908875 41.154297 29.748047 L 47.171875 28.693359 A 1.0001 1.0001 0 0 0 47.998047 27.707031 L 47.998047 22.207031 A 1.0001 1.0001 0 0 0 47.160156 21.220703 L 41.152344 20.238281 C 40.80968 19.078827 40.350281 17.974723 39.78125 16.931641 L 43.289062 11.933594 A 1.0001 1.0001 0 0 0 43.177734 10.652344 L 39.287109 6.7636719 A 1.0001 1.0001 0 0 0 37.996094 6.6601562 L 33.072266 10.201172 C 32.023186 9.6248101 30.909713 9.1579916 29.738281 8.8125 L 28.691406 2.828125 A 1.0001 1.0001 0 0 0 27.705078 2 L 22.205078 2 z M 23.056641 4 L 26.865234 4 L 27.861328 9.6855469 A 1.0001 1.0001 0 0 0 28.603516 10.484375 C 30.066026 10.848832 31.439607 11.426549 32.693359 12.185547 A 1.0001 1.0001 0 0 0 33.794922 12.142578 L 38.474609 8.7792969 L 41.167969 11.472656 L 37.835938 16.220703 A 1.0001 1.0001 0 0 0 37.796875 17.310547 C 38.548366 18.561471 39.118333 19.926379 39.482422 21.380859 A 1.0001 1.0001 0 0 0 40.291016 22.125 L 45.998047 23.058594 L 45.998047 26.867188 L 40.279297 27.871094 A 1.0001 1.0001 0 0 0 39.482422 28.617188 C 39.122545 30.069817 38.552234 31.434687 37.800781 32.685547 A 1.0001 1.0001 0 0 0 37.845703 33.785156 L 41.224609 38.474609 L 38.53125 41.169922 L 33.791016 37.84375 A 1.0001 1.0001 0 0 0 32.697266 37.808594 C 31.44975 38.567585 30.074755 39.148028 28.617188 39.517578 A 1.0001 1.0001 0 0 0 27.876953 40.3125 L 26.867188 46 L 23.052734 46 L 22.111328 40.337891 A 1.0001 1.0001 0 0 0 21.365234 39.53125 C 19.90185 39.170557 18.522094 38.59371 17.259766 37.835938 A 1.0001 1.0001 0 0 0 16.171875 37.875 L 11.46875 41.169922 L 8.7734375 38.470703 L 12.097656 33.824219 A 1.0001 1.0001 0 0 0 12.138672 32.724609 C 11.372652 31.458855 10.793319 30.079213 10.427734 28.609375 A 1.0001 1.0001 0 0 0 9.6328125 27.867188 L 4.0019531 26.867188 L 4.0019531 23.052734 L 9.6289062 22.117188 A 1.0001 1.0001 0 0 0 10.435547 21.373047 C 10.804273 19.898143 11.383325 18.518729 12.146484 17.255859 A 1.0001 1.0001 0 0 0 12.111328 16.164062 L 8.8261719 11.46875 L 11.523438 8.7734375 L 16.185547 12.105469 A 1.0001 1.0001 0 0 0 17.28125 12.148438 C 18.536908 11.394293 19.919867 10.822081 21.384766 10.462891 A 1.0001 1.0001 0 0 0 22.132812 9.6523438 L 23.056641 4 z M 25 17 C 20.593567 17 17 20.593567 17 25 C 17 29.406433 20.593567 33 25 33 C 29.406433 33 33 29.406433 33 25 C 33 20.593567 29.406433 17 25 17 z M 25 19 C 28.325553 19 31 21.674447 31 25 C 31 28.325553 28.325553 31 25 31 C 21.674447 31 19 28.325553 19 25 C 19 21.674447 21.674447 19 25 19 z"/></svg>
                     <span class="text-sm text-gray-700">Einstellungen</span>
                 </button>
             </div>
         </header>
+
         <main class="bg-white shadow-lg rounded-2xl p-4 sm:p-6">
             <section class="text-center mb-6">
                 <button id="playButton" class="w-full sm:w-56 mx-auto flex items-center justify-center gap-3 rounded-full bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 shadow-lg focus:outline-none focus:ring-4 focus:ring-brand-200 transition-all">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 3v18l15-9L5 3z" fill="currentColor" />
-                    </svg>
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3v18l15-9L5 3z" fill="currentColor"/></svg>
                     <span id="playBtnLabel">Intervall abspielen</span>
                 </button>
                 <p id="feedback" aria-live="polite" class="mt-4 text-base md:text-lg font-medium min-h-[1.25rem] text-gray-700"></p>
             </section>
+
             <section class="mb-6">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <button class="interval-button rounded-xl border border-gray-200 p-3 md:p-4 text-sm md:text-base hover:shadow-sm active:scale-[.98] focus:outline-none focus:ring-2 focus:ring-brand-200" data-interval="prime">Prime</button>
@@ -65,6 +64,7 @@
                     <button class="interval-button rounded-xl border border-gray-200 p-3 md:p-4 text-sm md:text-base hover:shadow-sm active:scale-[.98] focus:outline-none focus:ring-2 focus:ring-brand-200" data-interval="oktave">Oktave</button>
                 </div>
             </section>
+
             <section class="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:items-center sm:justify-between text-sm text-gray-600">
                 <div>Richtig: <span id="correct" class="font-medium">0</span> <span class="mx-2">|</span> Falsch: <span id="wrong" class="font-medium">0</span></div>
                 <div class="text-xs text-gray-500">Modus: <span id="currentModeLabel">Standardmodus</span></div>
@@ -72,6 +72,7 @@
         </main>
         <footer class="mt-6 text-center text-xs text-gray-500">Tippe zuerst auf <strong>Intervall abspielen</strong> und wähle dann die passende Antwort.</footer>
     </div>
+
     <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 p-4">
         <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-lg transform transition-all" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
@@ -102,47 +103,52 @@
             </div>
         </div>
     </div>
+
     <script>
         // --- Original logic adapted + fixes for modal state & responsiveness ---
-        const intervals = { 'prime': ['A4', 'A4'], 'sekunde': ['A4', 'B4'], 'terz': ['A4', 'C#5'], 'quarte': ['A4', 'D5'], 'quinte': ['A4', 'E5'], 'sexte': ['A4', 'F#5'], 'septime': ['A4', 'G#5'], 'oktave': ['A4', 'A5'] };
+        const intervals = {
+            'prime': ['A4', 'A4'],
+            'sekunde': ['A4', 'B4'],
+            'terz': ['A4', 'C#5'],
+            'quarte': ['A4', 'D5'],
+            'quinte': ['A4', 'E5'],
+            'sexte': ['A4', 'F#5'],
+            'septime': ['A4', 'G#5'],
+            'oktave': ['A4', 'A5']
+        };
+
         let currentInterval = null;
         let correctCount = 0;
         let wrongCount = 0;
         let pianoSampler = null;
         let initialized = false;
-        let currentMode = 'standard';
+        let currentMode = 'standard'; // keep saved mode separate from modal UI
 
-        // --- NEW, MORE ROBUST IOS FIX ---
-        let audioUnlocked = false;
-        function unlockAudio() {
-            if (audioUnlocked) return;
-            
-            // Create a tiny, silent AudioBuffer source
-            const audio = document.createElement('audio');
-            audio.setAttribute("x-webkit-airplay", "deny"); // Prevent AirPlay icon
-            audio.setAttribute("playsinline", ""); // Required on iOS
-            audio.preload = "auto";
-            audio.loop = true;
-            // A tiny, silent MP3 data URI
-            audio.src = "data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vVGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAAgAAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsIMAAAACAAAF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECDF-wQCEH-AQBAIACEBDGAgCECD";
-
-            audio.play().then(() => {
-                console.log("Silent audio playback started to unlock Web Audio.");
-                audioUnlocked = true;
-            }).catch(e => {
-                console.warn("Could not start silent audio playback for unlocking.", e);
-            });
-        }
-        // --- END FIX ---
+        // --- IOS FIX START ---
+        // Create a silent audio element to unlock Web Audio on iOS in silent mode.
+        // It uses a tiny, silent MP3 file encoded in base64.
+        const silentAudioElement = new Audio("data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+        silentAudioElement.loop = true;
+        // --- IOS FIX END ---
 
         async function initAudio() {
             if (!initialized) {
+                // --- IOS FIX START ---
+                // On the first user interaction, play the silent audio.
+                // This "unlocks" the audio context for Tone.js on iOS devices when the ringer is off.
+                try {
+                    await silentAudioElement.play();
+                } catch (e) {
+                    console.warn("Silent audio playback for iOS fix failed. This is expected on some platforms.", e);
+                }
+                // --- IOS FIX END ---
+
                 await Tone.start();
                 const feedbackEl = document.getElementById('feedback');
                 const originalText = feedbackEl.textContent;
                 feedbackEl.textContent = 'Lade Klaviersamples...';
                 pianoSampler = new Tone.Sampler({
-                    urls: {"A4": "A4.mp3","C4": "C4.mp3","D#4": "Ds4.mp3","F#4": "Fs4.mp3"},
+                    urls: { "A4": "A4.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3" },
                     release: 1,
                     baseUrl: "https://tonejs.github.io/audio/salamander/",
                     onload: () => {
@@ -150,25 +156,32 @@
                         feedbackEl.textContent = originalText;
                     }
                 }).toDestination();
+
                 return new Promise((resolve) => {
                     const checkLoaded = setInterval(() => {
-                        if (initialized) { clearInterval(checkLoaded); resolve(); }
+                        if (initialized) {
+                            clearInterval(checkLoaded);
+                            resolve();
+                        }
                     }, 100);
                 });
             }
         }
+
         function playNote(note, duration = 1) {
             return new Promise(resolve => {
                 pianoSampler.triggerAttackRelease(note, duration);
                 setTimeout(resolve, duration * 1000);
             });
         }
+
         async function playInterval(intervalName) {
             const [firstNote, secondNote] = intervals[intervalName];
             await playNote(firstNote, 1);
             await new Promise(resolve => setTimeout(resolve, 300));
             await playNote(secondNote, 1);
         }
+
         function generateRandomInterval() {
             const intervalNames = Object.keys(intervals);
             if (currentMode === 'focused') {
@@ -183,28 +196,26 @@
                 return intervalNames[Math.floor(Math.random() * intervalNames.length)];
             }
         }
+
         function updateScore() {
             document.getElementById('correct').textContent = correctCount;
             document.getElementById('wrong').textContent = wrongCount;
         }
+
         // Play button behavior
         const playButton = document.getElementById('playButton');
         const playBtnLabel = document.getElementById('playBtnLabel');
         playButton.addEventListener('click', async () => {
-            // --- FIX APPLIED HERE ---
-            // On the first user interaction, play a silent looping sound
-            // to enable Web Audio API playback on muted iOS devices.
-            unlockAudio();
-            // --- END FIX ---
-
             try {
                 playButton.disabled = true;
                 playBtnLabel.textContent = 'Lade...';
                 await initAudio();
+
                 document.getElementById('feedback').textContent = '';
                 if (currentInterval === null) {
                     currentInterval = generateRandomInterval();
                 }
+
                 playBtnLabel.textContent = 'Spiele...';
                 await playInterval(currentInterval);
             } catch (error) {
@@ -215,6 +226,7 @@
                 playBtnLabel.textContent = 'Intervall abspielen';
             }
         });
+
         // Answer buttons
         document.querySelectorAll('.interval-button').forEach(button => {
             button.addEventListener('click', () => {
@@ -235,6 +247,7 @@
                 currentInterval = null;
             });
         });
+
         // Settings modal logic
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsModal = document.getElementById('settingsModal');
@@ -245,38 +258,63 @@
         const currentModeLabel = document.getElementById('currentModeLabel');
         const modeStandard = document.getElementById('modeStandard');
         const modeFocused = document.getElementById('modeFocused');
+
         function syncModalWithState() {
             modeStandard.checked = currentMode === 'standard';
             modeFocused.checked = currentMode === 'focused';
         }
+
         function openModal() {
-            syncModalWithState();
+            syncModalWithState(); // reset any unsaved changes
             settingsModal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
+            // small pop animation
             dialogCard.classList.add('scale-95');
             setTimeout(() => dialogCard.classList.remove('scale-95'), 10);
+            // focus first control
             modeStandard.focus();
         }
+
         function closeModal() {
             settingsModal.classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
         }
+
         settingsBtn.addEventListener('click', openModal);
-        closeSettings.addEventListener('click', () => { syncModalWithState(); closeModal(); });
-        cancelSettings.addEventListener('click', () => { syncModalWithState(); closeModal(); });
+        closeSettings.addEventListener('click', () => {
+            syncModalWithState();
+            closeModal();
+        });
+        cancelSettings.addEventListener('click', () => {
+            syncModalWithState();
+            closeModal();
+        });
         saveSettings.addEventListener('click', () => {
             const selected = document.querySelector('input[name="mode"]:checked').value;
-            currentMode = selected;
+            currentMode = selected; // persist selection
             currentModeLabel.textContent = currentMode === 'standard' ? 'Standardmodus' : 'Fokussierter Modus';
             closeModal();
         });
+
+        // close modal when clicking outside the dialog
         settingsModal.addEventListener('click', (e) => {
-            if (e.target === settingsModal) { syncModalWithState(); closeModal(); }
+            if (e.target === settingsModal) {
+                syncModalWithState();
+                closeModal();
+            }
         });
+
+        // Close on Escape
         window.addEventListener('keydown', (e) => {
-            if (!settingsModal.classList.contains('hidden') && e.key === 'Escape') { syncModalWithState(); closeModal(); }
+            if (!settingsModal.classList.contains('hidden') && e.key === 'Escape') {
+                syncModalWithState();
+                closeModal();
+            }
         });
+
+        // initialize score labels
         updateScore();
     </script>
+
 </body>
 </html>
