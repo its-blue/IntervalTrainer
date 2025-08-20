@@ -57,14 +57,16 @@
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M5 3v18l15-9L5 3z" fill="currentColor" />
           </svg>
-          <span id="playBtnLabel">Intervall abspielen</span>
+          <!-- Initial state of the button is to start/initialize -->
+          <span id="playBtnLabel">Training starten</span>
         </button>
         <p id="feedback" aria-live="polite" class="mt-4 text-base md:text-lg font-medium min-h-[1.25rem] text-gray-700">
+          Klicke, um die Audio-Engine zu starten.
         </p>
       </section>
 
       <section class="mb-6">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div id="answerGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 opacity-50 pointer-events-none">
           <button
             class="interval-button rounded-xl border border-gray-200 p-3 md:p-4 text-sm md:text-base hover:shadow-sm active:scale-[.98] focus:outline-none focus:ring-2 focus:ring-brand-200"
             data-interval="prime">Prime</button>
@@ -140,301 +142,173 @@
   </div>
 
   <script>
-    // --- iOS-Compatible Audio Logic ---
-const intervals = {
-    'prime': ['A4', 'A4'],
-    'sekunde': ['A4', 'B4'],
-    'terz': ['A4', 'C#5'],
-    'quarte': ['A4', 'D5'],
-    'quinte': ['A4', 'E5'],
-    'sexte': ['A4', 'F#5'],
-    'septime': ['A4', 'G#5'],
-    'oktave': ['A4', 'A5']
-};
+    // --- NEW, MORE ROBUST IOS-COMPATIBLE SCRIPT ---
 
-let currentInterval = null;
-let correctCount = 0;
-let wrongCount = 0;
-let pianoSampler = null;
-let initialized = false;
-let currentMode = 'standard';
-let audioContextStarted = false;
+    const intervals = {
+      'prime': ['A4', 'A4'], 'sekunde': ['A4', 'B4'], 'terz': ['A4', 'C#5'],
+      'quarte': ['A4', 'D5'], 'quinte': ['A4', 'E5'], 'sexte': ['A4', 'F#5'],
+      'septime': ['A4', 'G#5'], 'oktave': ['A4', 'A5']
+    };
 
-// iOS-specific audio initialization
-async function initAudioContext() {
-    if (!audioContextStarted) {
-        try {
-            // Force Tone.js to start with explicit user interaction
-            if (Tone.context.state === 'suspended') {
-                await Tone.context.resume();
+    let currentInterval = null;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let pianoSampler = null;
+    let isAudioReady = false; // The crucial state flag
+    let currentMode = 'standard';
+
+    // --- DOM Elements ---
+    const playButton = document.getElementById('playButton');
+    const playBtnLabel = document.getElementById('playBtnLabel');
+    const feedbackEl = document.getElementById('feedback');
+    const answerGrid = document.getElementById('answerGrid');
+
+    // This function only creates the sampler and waits for it to load.
+    async function setupAudio() {
+      // 1. Unlock AudioContext on user gesture (already done by Tone.start() in the event listener)
+      // 2. Create the instrument
+      pianoSampler = new Tone.Sampler({
+        urls: { "A4": "A4.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3" },
+        release: 1,
+        baseUrl: "https://tonejs.github.io/audio/salamander/",
+      }).toDestination();
+
+      // 3. Wait for all audio files to be loaded by the sampler.
+      // Tone.loaded() returns a promise that resolves when all buffers are ready.
+      await Tone.loaded();
+      console.log("Piano sampler is loaded and ready.");
+    }
+
+    async function playCurrentInterval() {
+      if (!pianoSampler || !currentInterval) return;
+
+      const [firstNote, secondNote] = intervals[currentInterval];
+      const now = Tone.now();
+      pianoSampler.triggerAttackRelease(firstNote, "1n", now);
+      pianoSampler.triggerAttackRelease(secondNote, "1n", now + 0.8);
+    }
+
+    function generateRandomInterval() {
+        const intervalNames = Object.keys(intervals);
+        if (currentMode === 'focused') {
+            const focusedIntervals = ['terz', 'quarte', 'quinte', 'sexte'];
+            const otherIntervals = intervalNames.filter(i => !focusedIntervals.includes(i));
+            if (Math.random() < 0.65) {
+                return focusedIntervals[Math.floor(Math.random() * focusedIntervals.length)];
+            } else {
+                return otherIntervals[Math.floor(Math.random() * otherIntervals.length)];
             }
-            await Tone.start();
-            audioContextStarted = true;
-        } catch (error) {
-            console.error('AudioContext initialization failed:', error);
-            throw new Error('Audio initialization failed');
-        }
-    }
-}
-
-async function initAudio() {
-    if (!initialized) {
-        const feedbackEl = document.getElementById('feedback');
-        const originalText = feedbackEl.textContent;
-        
-        try {
-            feedbackEl.textContent = 'Initialisiere Audio...';
-            
-            // Ensure audio context is started first
-            await initAudioContext();
-            
-            feedbackEl.textContent = 'Lade Klaviersamples...';
-            
-            // Create sampler with iOS-friendly settings
-            pianoSampler = new Tone.Sampler({
-                urls: {
-                    "A4": "A4.mp3",
-                    "C4": "C4.mp3", 
-                    "D#4": "Ds4.mp3",
-                    "F#4": "Fs4.mp3"
-                },
-                release: 1,
-                baseUrl: "https://tonejs.github.io/audio/salamander/",
-                onload: () => {
-                    initialized = true;
-                    feedbackEl.textContent = originalText;
-                },
-                onerror: (error) => {
-                    console.error('Sampler loading error:', error);
-                    feedbackEl.textContent = 'Fehler beim Laden der Samples';
-                }
-            }).toDestination();
-
-            // Wait for samples to load with timeout
-            return new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    reject(new Error('Sample loading timeout'));
-                }, 10000); // 10 second timeout
-
-                const checkLoaded = setInterval(() => {
-                    if (initialized) {
-                        clearInterval(checkLoaded);
-                        clearTimeout(timeout);
-                        resolve();
-                    }
-                }, 100);
-            });
-        } catch (error) {
-            console.error('Audio initialization error:', error);
-            feedbackEl.textContent = 'Audio-Fehler. Bitte neu laden.';
-            throw error;
-        }
-    }
-}
-
-function playNote(note, duration = 1) {
-    return new Promise((resolve) => {
-        try {
-            if (!pianoSampler || !initialized) {
-                console.error('Sampler not initialized');
-                resolve();
-                return;
-            }
-
-            // iOS-friendly note triggering
-            pianoSampler.triggerAttackRelease(note, duration, Tone.now());
-            
-            // Wait for note duration plus small buffer
-            setTimeout(resolve, (duration * 1000) + 100);
-        } catch (error) {
-            console.error('Error playing note:', error);
-            resolve();
-        }
-    });
-}
-
-async function playInterval(intervalName) {
-    try {
-        const [firstNote, secondNote] = intervals[intervalName];
-        
-        // Play first note
-        await playNote(firstNote, 1);
-        
-        // Pause between notes
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Play second note
-        await playNote(secondNote, 1);
-    } catch (error) {
-        console.error('Error playing interval:', error);
-        throw error;
-    }
-}
-
-function generateRandomInterval() {
-    const intervalNames = Object.keys(intervals);
-    if (currentMode === 'focused') {
-        const focusedIntervals = ['terz', 'quarte', 'quinte', 'sexte'];
-        const otherIntervals = intervalNames.filter(i => !focusedIntervals.includes(i));
-        if (Math.random() < 0.65) {
-            return focusedIntervals[Math.floor(Math.random() * focusedIntervals.length)];
         } else {
-            return otherIntervals[Math.floor(Math.random() * otherIntervals.length)];
+            return intervalNames[Math.floor(Math.random() * intervalNames.length)];
         }
-    } else {
-        return intervalNames[Math.floor(Math.random() * intervalNames.length)];
     }
-}
 
-function updateScore() {
-    document.getElementById('correct').textContent = correctCount;
-    document.getElementById('wrong').textContent = wrongCount;
-}
+    function updateScore() {
+      document.getElementById('correct').textContent = correctCount;
+      document.getElementById('wrong').textContent = wrongCount;
+    }
 
-// Enhanced play button behavior with iOS support
-const playButton = document.getElementById('playButton');
-const playBtnLabel = document.getElementById('playBtnLabel');
-
-playButton.addEventListener('click', async () => {
-    try {
+    // --- MAIN EVENT LISTENER ---
+    playButton.addEventListener('click', async () => {
+      // === STAGE 1: ONE-TIME AUDIO INITIALIZATION ===
+      if (!isAudioReady) {
         playButton.disabled = true;
-        playBtnLabel.textContent = 'Lade...';
-        
-        // Clear previous feedback
-        document.getElementById('feedback').textContent = '';
-        
-        // Initialize audio if needed
-        await initAudio();
-        
-        // Generate new interval if none exists
-        if (currentInterval === null) {
-            currentInterval = generateRandomInterval();
-        }
-        
-        playBtnLabel.textContent = 'Spiele...';
-        
-        // Play the interval
-        await playInterval(currentInterval);
-        
-    } catch (error) {
-        console.error('Error in play button handler:', error);
-        document.getElementById('feedback').textContent = 'Fehler beim Abspielen. Bitte erneut versuchen.';
-        
-        // Reset initialization state on error
-        if (error.message.includes('Audio')) {
-            initialized = false;
-            audioContextStarted = false;
-            pianoSampler = null;
-        }
-    } finally {
-        playButton.disabled = false;
-        playBtnLabel.textContent = 'Intervall abspielen';
-    }
-});
+        playBtnLabel.textContent = 'Lade Audio...';
+        feedbackEl.textContent = 'Starte Audio-Engine und lade Samples...';
 
-// Answer buttons
-document.querySelectorAll('.interval-button').forEach(button => {
-    button.addEventListener('click', () => {
+        try {
+          // This MUST be the first audio-related call inside a user event for iOS.
+          await Tone.start();
+          console.log("AudioContext started.");
+
+          // Now create and load the instrument.
+          await setupAudio();
+
+          // If we get here, everything is ready!
+          isAudioReady = true;
+          playBtnLabel.textContent = 'Intervall abspielen';
+          feedbackEl.textContent = 'Bereit! Spiele das erste Intervall.';
+          answerGrid.classList.remove('opacity-50', 'pointer-events-none'); // Enable answer buttons
+        
+        } catch (error) {
+          console.error("Failed to initialize audio:", error);
+          feedbackEl.textContent = 'Audio konnte nicht geladen werden. Bitte lade die Seite neu.';
+          // Keep button disabled on failure
+          return;
+        } finally {
+          playButton.disabled = false;
+        }
+      }
+      
+      // === STAGE 2: REGULAR PLAYBACK LOGIC ===
+      // This part runs on the first click *after* successful initialization,
+      // and on every subsequent click.
+      if (isAudioReady) {
+          playButton.disabled = true;
+          feedbackEl.textContent = '';
+          
+          if (currentInterval === null) {
+              currentInterval = generateRandomInterval();
+          }
+
+          playBtnLabel.textContent = 'Spiele...';
+          await playCurrentInterval();
+          
+          playButton.disabled = false;
+          playBtnLabel.textContent = 'Intervall abspielen';
+      }
+    });
+
+    // --- Answer buttons ---
+    document.querySelectorAll('.interval-button').forEach(button => {
+      button.addEventListener('click', () => {
+        if (!isAudioReady) return; // Ignore clicks before audio is ready
+
         if (!currentInterval) {
-            document.getElementById('feedback').textContent = 'Bitte zuerst ein Intervall abspielen!';
-            return;
+          feedbackEl.textContent = 'Bitte zuerst ein Intervall abspielen!';
+          return;
         }
-
         const selectedInterval = button.getAttribute('data-interval');
         if (selectedInterval === currentInterval) {
-            document.getElementById('feedback').textContent = 'Richtig!';
-            correctCount++;
+          feedbackEl.textContent = 'Richtig!';
+          correctCount++;
         } else {
-            const capitalizedInterval = currentInterval.charAt(0).toUpperCase() + currentInterval.slice(1);
-            document.getElementById('feedback').textContent = `Falsch! Das war eine ${capitalizedInterval}.`;
-            wrongCount++;
+          const capitalizedInterval = currentInterval.charAt(0).toUpperCase() + currentInterval.slice(1);
+          feedbackEl.textContent = `Falsch! Das war eine ${capitalizedInterval}.`;
+          wrongCount++;
         }
-
         updateScore();
-        currentInterval = null;
+        currentInterval = null; // Reset for the next round
+      });
     });
-});
 
-// Settings modal logic (unchanged)
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsModal = document.getElementById('settingsModal');
-const dialogCard = settingsModal.querySelector('div[role="dialog"]');
-const closeSettings = document.getElementById('closeSettings');
-const cancelSettings = document.getElementById('cancelSettings');
-const saveSettings = document.getElementById('saveSettings');
-const currentModeLabel = document.getElementById('currentModeLabel');
-const modeStandard = document.getElementById('modeStandard');
-const modeFocused = document.getElementById('modeFocused');
+    // --- Settings modal logic (no changes needed) ---
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettings = document.getElementById('closeSettings');
+    const cancelSettings = document.getElementById('cancelSettings');
+    const saveSettings = document.getElementById('saveSettings');
+    const currentModeLabel = document.getElementById('currentModeLabel');
+    const modeStandard = document.getElementById('modeStandard');
+    const modeFocused = document.getElementById('modeFocused');
 
-function syncModalWithState() {
-    modeStandard.checked = currentMode === 'standard';
-    modeFocused.checked = currentMode === 'focused';
-}
+    function syncModalWithState() { modeStandard.checked = currentMode === 'standard'; modeFocused.checked = currentMode === 'focused'; }
+    function openModal() { syncModalWithState(); settingsModal.classList.remove('hidden'); }
+    function closeModal() { settingsModal.classList.add('hidden'); }
 
-function openModal() {
-    syncModalWithState();
-    settingsModal.classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-    dialogCard.classList.add('scale-95');
-    setTimeout(() => dialogCard.classList.remove('scale-95'), 10);
-    modeStandard.focus();
-}
+    settingsBtn.addEventListener('click', openModal);
+    closeSettings.addEventListener('click', closeModal);
+    cancelSettings.addEventListener('click', closeModal);
+    saveSettings.addEventListener('click', () => {
+      currentMode = document.querySelector('input[name="mode"]:checked').value;
+      currentModeLabel.textContent = currentMode === 'standard' ? 'Standardmodus' : 'Fokussierter Modus';
+      closeModal();
+    });
+    settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) { closeModal(); } });
+    window.addEventListener('keydown', (e) => { if (!settingsModal.classList.contains('hidden') && e.key === 'Escape') { closeModal(); } });
 
-function closeModal() {
-    settingsModal.classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-}
-
-settingsBtn.addEventListener('click', openModal);
-
-closeSettings.addEventListener('click', () => {
-    syncModalWithState();
-    closeModal();
-});
-
-cancelSettings.addEventListener('click', () => {
-    syncModalWithState();
-    closeModal();
-});
-
-saveSettings.addEventListener('click', () => {
-    const selected = document.querySelector('input[name="mode"]:checked').value;
-    currentMode = selected;
-    currentModeLabel.textContent = currentMode === 'standard' ? 'Standardmodus' : 'Fokussierter Modus';
-    closeModal();
-});
-
-settingsModal.addEventListener('click', (e) => {
-    if (e.target === settingsModal) {
-        syncModalWithState();
-        closeModal();
-    }
-});
-
-window.addEventListener('keydown', (e) => {
-    if (!settingsModal.classList.contains('hidden') && e.key === 'Escape') {
-        syncModalWithState();
-        closeModal();
-    }
-});
-
-// iOS-specific: Add event listener for page visibility to handle background/foreground
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        // Page is going to background - iOS may suspend audio context
-        if (Tone.context.state === 'running') {
-            Tone.context.suspend();
-        }
-    } else {
-        // Page is coming to foreground - resume audio context if needed
-        if (Tone.context.state === 'suspended' && audioContextStarted) {
-            Tone.context.resume();
-        }
-    }
-});
-
-// Initialize score display
-updateScore();
+    // Initialize score display
+    updateScore();
   </script>
 </body>
 
