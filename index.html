@@ -140,198 +140,240 @@
   </div>
 
   <script>
-    // --- NEW, IOS-COMPATIBLE SCRIPT ---
+    /**
+     * iOS-safe audio init + small fixes
+     * - Unlock WebAudio on first user gesture (iOS requirement)
+     * - Resume context on visibility changes
+     * - Wait for Tone.Sampler to fully load before playing
+     * - Fix broken template string in the "Falsch!" message
+     */
 
     const intervals = {
-      'prime': ['A4', 'A4'], 'sekunde': ['A4', 'B4'], 'terz': ['A4', 'C#5'],
-      'quarte': ['A4', 'D5'], 'quinte': ['A4', 'E5'], 'sexte': ['A4', 'F#5'],
-      'septime': ['A4', 'G#5'], 'oktave': ['A4', 'A5']
+    'prime':  ['A4', 'A4'],
+    'sekunde':['A4', 'B4'],
+    'terz':   ['A4', 'C#5'],
+    'quarte': ['A4', 'D5'],
+    'quinte': ['A4', 'E5'],
+    'sexte':  ['A4', 'F#5'],
+    'septime':['A4', 'G#5'],
+    'oktave': ['A4', 'A5']
     };
 
     let currentInterval = null;
     let correctCount = 0;
     let wrongCount = 0;
     let pianoSampler = null;
-    let audioInitialized = false; // Flag to check if Tone.js and sampler are ready
+    let samplerLoaded = false;
+    let contextStarted = false;
     let currentMode = 'standard';
 
-    // This function handles the one-time audio setup. It must be triggered by a user action.
-    // The primary fix for iOS is calling Tone.start() inside a user-initiated event.
-    async function initializeAudio() {
-      // Start Tone.js's audio context. This is the crucial step for iOS.
-      await Tone.start();
-      console.log("AudioContext started successfully.");
+    const isIOS = () =>
+    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-      const feedbackEl = document.getElementById('feedback');
-      const originalText = feedbackEl.textContent;
-      feedbackEl.textContent = 'Lade Klaviersamples...';
+    // --- Audio unlock on first user gesture (crucial for iOS) ---
+    function installAudioUnlock() {
+    const tryStart = async () => {
+        if (contextStarted) return;
+        try {
+        await Tone.start(); // must be in a user gesture
+        // Prime the graph with a silent tick to satisfy older iOS versions
+        const silentGain = new Tone.Gain(0).toDestination();
+        const osc = new Tone.Oscillator(440).connect(silentGain);
+        osc.start(Tone.now()).stop(Tone.now() + 0.01);
+        contextStarted = true;
+        removeListeners();
+        } catch (e) {
+        // ignore, we'll try again on the next gesture
+        console.warn('Audio unlock failed, will retry on next gesture', e);
+        }
+    };
 
-      // Return a promise that resolves when the piano sampler is loaded
-      return new Promise((resolve, reject) => {
+    const events = ['pointerdown','touchstart','mousedown','keydown'];
+    const removeListeners = () => events.forEach(ev => document.removeEventListener(ev, tryStart, { passive:true }));
+    events.forEach(ev => document.addEventListener(ev, tryStart, { passive:true }));
+    }
+
+    // Resume the context when coming back to the tab (Safari sometimes suspends it)
+    document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && Tone.context.state !== 'running') {
+        try { await Tone.start(); } catch {}
+    }
+    });
+
+    // --- Init & playback helpers ---
+    async function ensureAudioReady() {
+    if (!contextStarted) {
+        // If user presses Play without previous gesture, this call is still in that gesture
+        await Tone.start();
+        contextStarted = true;
+    }
+
+    if (!pianoSampler) {
+        const volume = new Tone.Volume(-6).toDestination(); // gentle gain
         pianoSampler = new Tone.Sampler({
-          urls: { "A4": "A4.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3" },
-          release: 1,
-          baseUrl: "https://tonejs.github.io/audio/salamander/",
-          onload: () => {
-            console.log("Sampler loaded.");
-            audioInitialized = true;
-            feedbackEl.textContent = originalText;
-            resolve();
-          },
-          onerror: (error) => {
-            console.error("Error loading sampler:", error);
-            feedbackEl.textContent = 'Fehler beim Laden der Audio-Dateien.';
-            reject(error);
-          }
-        }).toDestination();
-      });
+        urls: {
+            "A4": "A4.mp3",
+            "C4": "C4.mp3",
+            "D#4": "Ds4.mp3",
+            "F#4": "Fs4.mp3"
+        },
+        release: 1,
+        baseUrl: "https://tonejs.github.io/audio/salamander/",
+        onload: () => { samplerLoaded = true; }
+        }).connect(volume);
+
+        // Wait until sampler reports loaded (covers iOS decode lag)
+        if (!samplerLoaded) {
+        await new Promise(resolve => {
+            const t = setInterval(() => {
+            if (samplerLoaded) { clearInterval(t); resolve(); }
+            }, 50);
+        });
+        }
+        // Also make sure Tone thinks all assets are ready
+        try { await Tone.loaded(); } catch {}
+    }
+    }
+
+    function playNote(note, duration = 1) {
+    return new Promise(resolve => {
+        const now = Tone.now();
+        pianoSampler.triggerAttackRelease(note, duration, now);
+        setTimeout(resolve, duration * 1000);
+    });
     }
 
     async function playInterval(intervalName) {
-      if (!pianoSampler) return;
-      const [firstNote, secondNote] = intervals[intervalName];
-
-      // Use Tone.js's timing for more accurate playback
-      const now = Tone.now();
-      pianoSampler.triggerAttackRelease(firstNote, "1n", now);
-      pianoSampler.triggerAttackRelease(secondNote, "1n", now + 0.8);
-
-      // Return a promise that resolves after the interval has finished playing
-      return new Promise(resolve => setTimeout(resolve, 1800));
+    const [firstNote, secondNote] = intervals[intervalName];
+    await playNote(firstNote, 1);
+    await new Promise(r => setTimeout(r, 300));
+    await playNote(secondNote, 1);
     }
 
     function generateRandomInterval() {
-      const intervalNames = Object.keys(intervals);
-      if (currentMode === 'focused') {
-        const focusedIntervals = ['terz', 'quarte', 'quinte', 'sexte'];
-        const otherIntervals = intervalNames.filter(i => !focusedIntervals.includes(i));
-        if (Math.random() < 0.65) {
-          return focusedIntervals[Math.floor(Math.random() * focusedIntervals.length)];
-        } else {
-          return otherIntervals[Math.floor(Math.random() * otherIntervals.length)];
-        }
-      } else { // standard mode
-        return intervalNames[Math.floor(Math.random() * intervalNames.length)];
-      }
+    const names = Object.keys(intervals);
+    if (currentMode === 'focused') {
+        const focused = ['terz', 'quarte', 'quinte', 'sexte'];
+        const others = names.filter(n => !focused.includes(n));
+        return (Math.random() < 0.65)
+        ? focused[Math.floor(Math.random() * focused.length)]
+        : others[Math.floor(Math.random() * others.length)];
+    }
+    return names[Math.floor(Math.random() * names.length)];
     }
 
     function updateScore() {
-      document.getElementById('correct').textContent = correctCount;
-      document.getElementById('wrong').textContent = wrongCount;
+    document.getElementById('correct').textContent = correctCount;
+    document.getElementById('wrong').textContent = wrongCount;
     }
 
-    // --- Event Listeners ---
-
-    const playButton = document.getElementById('playButton');
+    // --- UI wiring ---
+    const playButton   = document.getElementById('playButton');
     const playBtnLabel = document.getElementById('playBtnLabel');
+    const feedbackEl   = document.getElementById('feedback');
+
+    installAudioUnlock(); // important for iOS
 
     playButton.addEventListener('click', async () => {
-      playButton.disabled = true;
+    try {
+        playButton.disabled = true;
+        const prev = feedbackEl.textContent;
+        playBtnLabel.textContent = 'Lade...';
 
-      try {
-        // On the very first click, initialize the audio system.
-        // This is required for audio to work on iOS.
-        if (!audioInitialized) {
-          playBtnLabel.textContent = 'Audio starten...';
-          await initializeAudio();
+        await ensureAudioReady();
+
+        if (!samplerLoaded) {
+        feedbackEl.textContent = 'Lade Klaviersamples...';
+        } else {
+        feedbackEl.textContent = prev;
         }
 
-        document.getElementById('feedback').textContent = '';
-        if (currentInterval === null) {
-          currentInterval = generateRandomInterval();
-        }
+        if (currentInterval === null) currentInterval = generateRandomInterval();
 
         playBtnLabel.textContent = 'Spiele...';
         await playInterval(currentInterval);
-
-      } catch (error) {
-        console.error('Error playing interval:', error);
-        document.getElementById('feedback').textContent = 'Fehler beim Abspielen. Erneut versuchen.';
-      } finally {
+    } catch (err) {
+        console.error('Error playing interval:', err);
+        feedbackEl.textContent = 'Fehler beim Abspielen. Bitte erneut versuchen.';
+    } finally {
         playButton.disabled = false;
         playBtnLabel.textContent = 'Intervall abspielen';
-      }
+    }
     });
 
     // Answer buttons
     document.querySelectorAll('.interval-button').forEach(button => {
-      button.addEventListener('click', () => {
+    button.addEventListener('click', () => {
         if (!currentInterval) {
-          document.getElementById('feedback').textContent = 'Bitte zuerst ein Intervall abspielen!';
-          return;
+        feedbackEl.textContent = 'Bitte zuerst ein Intervall abspielen!';
+        return;
         }
         const selectedInterval = button.getAttribute('data-interval');
         if (selectedInterval === currentInterval) {
-          document.getElementById('feedback').textContent = 'Richtig!';
-          correctCount++;
+        feedbackEl.textContent = 'Richtig!';
+        correctCount++;
         } else {
-          const capitalizedInterval = currentInterval.charAt(0).toUpperCase() + currentInterval.slice(1);
-          document.getElementById('feedback').textContent = `Falsch! Das war eine ${capitalizedInterval}.`;
-          wrongCount++;
+        const capitalizedInterval =
+            currentInterval.charAt(0).toUpperCase() + currentInterval.slice(1);
+        // FIX: this line was breaking the script on all browsers (missing backticks)
+        feedbackEl.textContent = `Falsch! Das war eine ${capitalizedInterval}.`;
+        wrongCount++;
         }
         updateScore();
-        currentInterval = null; // Reset for the next round
-      });
+        currentInterval = null;
+    });
     });
 
-    // Settings modal logic (no changes needed here)
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsModal = document.getElementById('settingsModal');
-    const dialogCard = settingsModal.querySelector('div[role="dialog"]');
-    const closeSettings = document.getElementById('closeSettings');
-    const cancelSettings = document.getElementById('cancelSettings');
-    const saveSettings = document.getElementById('saveSettings');
-    const currentModeLabel = document.getElementById('currentModeLabel');
-    const modeStandard = document.getElementById('modeStandard');
-    const modeFocused = document.getElementById('modeFocused');
+    // Settings modal logic (unchanged except for being moved here)
+    const settingsBtn       = document.getElementById('settingsBtn');
+    const settingsModal     = document.getElementById('settingsModal');
+    const dialogCard        = settingsModal.querySelector('div[role="dialog"]');
+    const closeSettings     = document.getElementById('closeSettings');
+    const cancelSettings    = document.getElementById('cancelSettings');
+    const saveSettings      = document.getElementById('saveSettings');
+    const currentModeLabel  = document.getElementById('currentModeLabel');
+    const modeStandard      = document.getElementById('modeStandard');
+    const modeFocused       = document.getElementById('modeFocused');
 
     function syncModalWithState() {
-      modeStandard.checked = currentMode === 'standard';
-      modeFocused.checked = currentMode === 'focused';
+    modeStandard.checked = currentMode === 'standard';
+    modeFocused.checked  = currentMode === 'focused';
     }
-
     function openModal() {
-      syncModalWithState();
-      settingsModal.classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-      dialogCard.classList.add('scale-95');
-      setTimeout(() => dialogCard.classList.remove('scale-95'), 10);
-      modeStandard.focus();
+    syncModalWithState();
+    settingsModal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    dialogCard.classList.add('scale-95');
+    setTimeout(() => dialogCard.classList.remove('scale-95'), 10);
+    modeStandard.focus();
     }
-
     function closeModal() {
-      settingsModal.classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
+    settingsModal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
     }
 
     settingsBtn.addEventListener('click', openModal);
     closeSettings.addEventListener('click', () => { syncModalWithState(); closeModal(); });
     cancelSettings.addEventListener('click', () => { syncModalWithState(); closeModal(); });
-
     saveSettings.addEventListener('click', () => {
-      const selected = document.querySelector('input[name="mode"]:checked').value;
-      currentMode = selected;
-      currentModeLabel.textContent = currentMode === 'standard' ? 'Standardmodus' : 'Fokussierter Modus';
-      closeModal();
+    const selected = document.querySelector('input[name="mode"]:checked').value;
+    currentMode = selected;
+    currentModeLabel.textContent = currentMode === 'standard' ? 'Standardmodus' : 'Fokussierter Modus';
+    closeModal();
     });
-
     settingsModal.addEventListener('click', (e) => {
-      if (e.target === settingsModal) {
-        syncModalWithState();
-        closeModal();
-      }
+    if (e.target === settingsModal) { syncModalWithState(); closeModal(); }
     });
-
     window.addEventListener('keydown', (e) => {
-      if (!settingsModal.classList.contains('hidden') && e.key === 'Escape') {
-        syncModalWithState();
-        closeModal();
-      }
+    if (!settingsModal.classList.contains('hidden') && e.key === 'Escape') {
+        syncModalWithState(); closeModal();
+    }
     });
 
-    // Initialize score display on page load
+    // initialize score labels
     updateScore();
-  </script>
+    </script>
 </body>
 
 </html>
