@@ -1,6 +1,6 @@
-import { intervals } from './config.js';
+import { generateScaleIntervals, intervalNames } from './config.js';
 import { initAudio, playInterval } from './audio.js';
-import { elements, updateScore, setFeedback, setPlayButtonState } from './ui.js';
+import { elements, updateScore, setFeedback, setPlayButtonState, updateTitle } from './ui.js';
 
 // --- State ---
 let currentInterval = null;
@@ -8,10 +8,11 @@ let correctCount = 0;
 let wrongCount = 0;
 let currentMode = 'standard';
 let audioInitialized = false;
+let currentScale = 'A4'; // Default scale root note
+let activeIntervals = {}; // Will hold the intervals for the current scale
 
 // --- Game Logic ---
 function generateRandomInterval() {
-    const intervalNames = Object.keys(intervals);
     if (currentMode === 'focused') {
         const focused = ['terz', 'quarte', 'quinte', 'sexte'];
         const others = intervalNames.filter(i => !focused.includes(i));
@@ -24,6 +25,15 @@ function generateRandomInterval() {
     }
     // Standard mode: equal probability
     return intervalNames[Math.floor(Math.random() * intervalNames.length)];
+}
+
+function setScale(scaleRoot) {
+    currentScale = scaleRoot;
+    activeIntervals = generateScaleIntervals(currentScale);
+    
+    const selectedOption = elements.scaleSelect.querySelector(`option[value="${scaleRoot}"]`);
+    const displayName = selectedOption ? selectedOption.textContent : "Unbekannt";
+    updateTitle(displayName);
 }
 
 // --- Event Handlers ---
@@ -42,7 +52,8 @@ async function handlePlayButtonClick() {
         }
 
         setPlayButtonState('loading', 'Spiele...');
-        await playInterval(currentInterval);
+        const notesToPlay = activeIntervals[currentInterval];
+        await playInterval(notesToPlay);
 
     } catch (error) {
         console.error('Error playing interval:', error);
@@ -77,6 +88,7 @@ function handleAnswerButtonClick(event) {
 function openModal() {
     elements.modeStandard.checked = currentMode === 'standard';
     elements.modeFocused.checked = currentMode === 'focused';
+    elements.scaleSelect.value = currentScale; // Sync dropdown with current state
     
     elements.settingsModal.classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
@@ -93,14 +105,21 @@ function closeModal() {
 }
 
 function handleSaveSettings() {
-    const selected = document.querySelector('input[name="mode"]:checked').value;
-    currentMode = selected;
+    // Save mode
+    const selectedMode = document.querySelector('input[name="mode"]:checked').value;
+    currentMode = selectedMode;
     elements.currentModeLabel.textContent = currentMode === 'standard' ? 'Standardmodus' : 'Fokussierter Modus';
+
+    // Save scale
+    const selectedScale = elements.scaleSelect.value;
+    setScale(selectedScale);
+
     closeModal();
 }
 
 // --- Initialization ---
 function initialize() {
+    setScale(currentScale); // Generate intervals for the default scale on load
     updateScore(correctCount, wrongCount);
 
     elements.playButton.addEventListener('click', handlePlayButtonClick);

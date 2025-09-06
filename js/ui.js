@@ -6,6 +6,7 @@ export const elements = {
     playButton: document.getElementById('playButton'),
     playBtnLabel: document.getElementById('playBtnLabel'),
     intervalButtons: document.querySelectorAll('.interval-button'),
+    scaleTitle: document.getElementById('scaleTitle'),
     
     // Modal elements
     settingsBtn: document.getElementById('settingsBtn'),
@@ -17,6 +18,7 @@ export const elements = {
     currentModeLabel: document.getElementById('currentModeLabel'),
     modeStandard: document.getElementById('modeStandard'),
     modeFocused: document.getElementById('modeFocused'),
+    scaleSelect: document.getElementById('scaleSelect'),
 };
 
 export function updateScore(correct, wrong) {
@@ -32,4 +34,10 @@ export function setPlayButtonState(state, text) {
     const defaultText = 'Intervall abspielen';
     elements.playBtnLabel.textContent = text || defaultText;
     elements.playButton.disabled = (state === 'disabled' || state === 'loading');
+}
+
+export function updateTitle(scaleDisplayText) {
+    // Replace standard hyphen with non-breaking hyphen for display
+    const titleText = scaleDisplayText.replace('-', '‑');
+    elements.scaleTitle.textContent = titleText;
 }
