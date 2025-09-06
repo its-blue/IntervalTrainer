@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="de">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-t" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Intervall-Training</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -117,6 +117,18 @@
                     <option value="B4">H-Dur (B♮)</option>
                 </select>
             </div>
+
+            <!-- NEUER ABSCHNITT FÜR DIE INTERVALL-RICHTUNG -->
+            <div class="mt-4 border-t pt-4">
+                <label for="directionSelect" class="block text-sm font-medium text-gray-800">Intervall-Richtung</label>
+                <p class="mt-1 text-sm text-gray-600">Wähle, ob das Intervall aufsteigend, absteigend oder gemischt gespielt wird.</p>
+                <select id="directionSelect" name="direction" class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 sm:text-sm">
+                    <option value="up">tief zu hoch</option>
+                    <option value="down">hoch zu tief</option>
+                    <option value="mixed">gemischt</option>
+                </select>
+            </div>
+            <!-- ENDE NEUER ABSCHNITT -->
 
             <div class="mt-6 flex justify-end gap-3">
                 <button id="cancelSettings" class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 focus:outline-none">Abbrechen</button>

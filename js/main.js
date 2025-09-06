@@ -1,4 +1,4 @@
-import { generateScaleIntervals, intervalNames } from './config.js';
+import { generateScaleIntervals, intervalNames, majorScaleSteps } from './config.js';
 import { initAudio, playInterval } from './audio.js';
 import { elements, updateScore, setFeedback, setPlayButtonState, updateTitle } from './ui.js';
 
@@ -9,6 +9,7 @@ let wrongCount = 0;
 let currentMode = 'standard';
 let audioInitialized = false;
 let currentScale = 'A4'; // Default scale root note
+let currentDirection = 'up'; // 'up', 'down', or 'mixed'
 let activeIntervals = {}; // Will hold the intervals for the current scale
 
 // --- Game Logic ---
@@ -52,7 +53,25 @@ async function handlePlayButtonClick() {
         }
 
         setPlayButtonState('loading', 'Spiele...');
-        const notesToPlay = activeIntervals[currentInterval];
+
+        // NEUE LOGIK: Bestimme die Noten basierend auf der Richtung
+        let direction = currentDirection;
+        if (direction === 'mixed') {
+            direction = Math.random() < 0.5 ? 'up' : 'down';
+        }
+
+        let notesToPlay;
+        const rootNote = currentScale;
+
+        if (direction === 'up') {
+            notesToPlay = activeIntervals[currentInterval];
+        } else { // direction ist 'down'
+            const semitones = majorScaleSteps[currentInterval];
+            const root = Tone.Frequency(rootNote);
+            const secondNote = root.transpose(-semitones).toNote();
+            notesToPlay = [rootNote, secondNote];
+        }
+
         await playInterval(notesToPlay);
 
     } catch (error) {
@@ -88,7 +107,8 @@ function handleAnswerButtonClick(event) {
 function openModal() {
     elements.modeStandard.checked = currentMode === 'standard';
     elements.modeFocused.checked = currentMode === 'focused';
-    elements.scaleSelect.value = currentScale; // Sync dropdown with current state
+    elements.scaleSelect.value = currentScale;
+    elements.directionSelect.value = currentDirection; // Aktuellen Wert im Dropdown setzen
     
     elements.settingsModal.classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
@@ -105,14 +125,17 @@ function closeModal() {
 }
 
 function handleSaveSettings() {
-    // Save mode
+    // Modus speichern
     const selectedMode = document.querySelector('input[name="mode"]:checked').value;
     currentMode = selectedMode;
     elements.currentModeLabel.textContent = currentMode === 'standard' ? 'Standardmodus' : 'Fokussierter Modus';
 
-    // Save scale
+    // Tonart speichern
     const selectedScale = elements.scaleSelect.value;
     setScale(selectedScale);
+
+    // Richtung speichern
+    currentDirection = elements.directionSelect.value;
 
     closeModal();
 }

@@ -1,4 +1,6 @@
+
 let pianoSampler = null;
+let reverb = null; // <-- ADDED: A variable to hold our reverb effect
 let isInitialized = false;
 
 // Create a silent audio element to unlock Web Audio on iOS in silent mode.
@@ -17,7 +19,16 @@ export async function initAudio() {
 
     await Tone.start();
     
+    // --- START OF CHANGES ---
+
+    // 1. Create the reverb effect and connect it to the main output.
+    reverb = new Tone.Reverb({
+        decay: 3.5, // The length of the reverb tail
+        wet: 0.4    // The mix between the dry and wet (reverb) sound. 0 is all dry, 1 is all wet.
+    }).toDestination();
+
     return new Promise((resolve, reject) => {
+        
         pianoSampler = new Tone.Sampler({
             urls: { "A4": "A4.mp3", "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3" },
             release: 1,
@@ -29,7 +40,9 @@ export async function initAudio() {
             onerror: (error) => {
                 reject(error);
             }
-        }).toDestination();
+        }).connect(reverb); // <-- MODIFIED: Connect the sampler to the reverb instead of the destination
+        
+        // --- END OF CHANGES ---
     });
 }
 

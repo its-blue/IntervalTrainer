@@ -19,6 +19,7 @@ export const elements = {
     modeStandard: document.getElementById('modeStandard'),
     modeFocused: document.getElementById('modeFocused'),
     scaleSelect: document.getElementById('scaleSelect'),
+    directionSelect: document.getElementById('directionSelect'), // Hinzugefügt
 };
 
 export function updateScore(correct, wrong) {

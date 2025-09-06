@@ -1,5 +1,5 @@
 // Major scale intervals in semitones from the root
-const majorScaleSteps = {
+export const majorScaleSteps = {
     'prime': 0,
     'sekunde': 2,    // Major Second
     'terz': 4,       // Major Third
